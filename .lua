@@ -11,10 +11,10 @@
     MORE OPTIMIZED THAN REVIVE DUPER BY UPIO AND REVIVE DUMPER BY RHYAN57
 ]=]
 
-local receiver = receiver or "" -- who will receive all revives from sender
-local sender = sender or "" -- who will send all revives to receiver
-local revives = revives or 1000 -- amount of revives to send
-local destroylaggystuff = destroylaggystuff or revives >= 1000 -- destroy captions on both accounts and replica_setvalue on alt to prevent lags
+receiver = receiver or "" -- who will receive all revives from sender
+sender = sender or "" -- who will send all revives to receiver
+revives = revives or 1000 -- amount of revives to send
+destroylaggystuff = destroylaggystuff or revives >= 1000 -- destroy captions on both accounts and replica_setvalue on alt to prevent lags
 
 -- source code below, u can do anything with it if yk what r u doing
 
@@ -33,6 +33,11 @@ local mainp, altp = Players:FindFirstChild(receiver), Players:FindFirstChild(sen
 
 if not mainp or not altp then
     print("NO PLAYER")
+    return
+end
+
+if mainp == altp then
+    print("SAME PLAYER")
     return
 end
 
