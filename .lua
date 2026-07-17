@@ -11,10 +11,10 @@
     MORE OPTIMIZED THAN REVIVE DUPER BY UPIO AND REVIVE DUMPER BY RHYAN57
 ]=]
 
-local receiver = reviveduper and reviveduper.receiver or "" -- who will receive all revives from sender
-local sender = reviveduper and reviveduper.sender or "" -- who will send all revives to receiver
-local revives = reviveduper and reviveduper.revives or 1000 -- amount of revives to send
-local destroylaggystuff = reviveduper and reviveduper.destroylaggystuff or revives >= 1000 -- destroy captions on both accounts and replica_setvalue on alt to prevent lags
+receiver = receiver or "" -- who will receive all revives from sender
+sender = sender or "" -- who will send all revives to receiver
+revives = revives or 1000 -- amount of revives to send
+destroylaggystuff =destroylaggystuff or revives >= 1000 -- destroy captions on both accounts and replica_setvalue on alt to prevent lags
 
 -- source code below, u can do anything with it if yk what r u doing
 
