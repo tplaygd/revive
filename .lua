@@ -14,7 +14,7 @@
 receiver = receiver or "" -- who will receive all revives from sender
 sender = sender or "" -- who will send all revives to receiver
 revives = revives or 1000 -- amount of revives to send
-destroylaggystuff =destroylaggystuff or revives >= 1000 -- destroy captions on both accounts and replica_setvalue on alt to prevent lags
+destroylaggystuff = destroylaggystuff or revives >= 1000 -- destroy captions on both accounts and replica_setvalue on alt to prevent lags
 
 -- source code below, u can do anything with it if yk what r u doing
 
