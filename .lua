@@ -18,8 +18,9 @@ destroylaggystuff = destroylaggystuff or revives >= 1000 -- destroy captions on 
 
 -- source code below, u can do anything with it if yk what r u doing
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local cloneref = cloneref or function(...) return ... end
+local Players = cloneref(game:GetService("Players"))
+local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
 local LatestRoom = ReplicatedStorage:WaitForChild("GameData"):WaitForChild("LatestRoom")
 local RemotesFolder = ReplicatedStorage:WaitForChild("RemotesFolder")
 local player = Players.LocalPlayer
@@ -30,6 +31,11 @@ local setvalue = destroylaggystuff and ReplicatedStorage:WaitForChild("ReplicaRe
 
 local ismain, isalt = player.Name == receiver, player.Name == sender
 local mainp, altp = Players:FindFirstChild(receiver), Players:FindFirstChild(sender)
+
+print(receiver, sender)
+print(ismain, isalt)
+print(mainp, altp)
+print(mainp and mainp.Character, altp and altp.Character)
 
 if not mainp or not altp then
 	print("NO PLAYER")
