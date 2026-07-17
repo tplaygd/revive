@@ -6,19 +6,19 @@ This is a script that allows you to dupe revives in DOORS.
 2. Create elevator with main and alt account and press start (omg is that gd reference)
 3. If you have revive on alt account then you can start the script by executing this FIRST on sender account and THEN on receiver account (you can execute at door 0):
 ```lua
-local receiver = "MAIN ACCOUNT"
-local sender = "ALT ACCOUNT"
-local revives = 1000 -- how many revives to dupe
-local destroylaggystuff = true -- if you set big amount of revives you should turn this on
+receiver = "MAIN ACCOUNT"
+sender = "ALT ACCOUNT"
+revives = 1000 -- how many revives to dupe
+destroylaggystuff = true -- if you set big amount of revives you should turn this on
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/tplaygd/revive/refs/heads/main/.lua"))()
 ```
 If you dont have revive on alt account then you can get from achievements, or by simply transfering from main account by executing this FIRST on sender account and THEN on receiver account (you can execute at door 0):
 ```lua
-local receiver = "ALT ACCOUNT"
-local sender = "MAIN ACCOUNT"
-local revives = 1
-local destroylaggystuff = false
+receiver = "ALT ACCOUNT"
+sender = "MAIN ACCOUNT"
+revives = 1
+destroylaggystuff = false
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/tplaygd/revive/refs/heads/main/.lua"))()
 ```
