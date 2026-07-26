@@ -239,29 +239,41 @@ if Revives.Value == 0 and not IsMain then
         Duration = 5
     })
 
+	local obtained = false
+
     local function OnObtainRevive(...)
-        task.delay(.05, function()
-            game:Shutdown()
-        end)
+		if obtained then return false end
+		obtained = true
         return true
     end
 
     if hookmetamethod then
         local mtHook; mtHook = hookmetamethod(game, "__newindex", function(...)
 			local self, key = ...
-            if not checkcaller() and rawequal(self, ObtainReviveEvent) and key == "OnClientInvoke" then
-                return
+    
+            if rawequal(self, ObtainReviveEvent) and key == "OnClientInvoke" then
+                if not checkcaller() then
+                    return
+                end
             end
+    
             return mtHook(...)
         end)
     else
         task.defer(function()
-            while''do
+            while task.wait() do
                 ObtainReviveEvent.OnClientInvoke = OnObtainRevive
-                task.wait()
             end
         end)
     end
+
+	ObtainReviveEvent.OnClientInvoke = OnObtainRevive
+
+	while not obtained do
+		task.wait()
+	end
+	task.wait()
+	game:Shutdown()
 
     return
 end
@@ -309,16 +321,19 @@ if IsMain then
     if hookmetamethod then
         local mtHook; mtHook = hookmetamethod(game, "__newindex", function(...)
 			local self, key = ...
-            if not checkcaller() and rawequal(self, ObtainReviveEvent) and key == "OnClientInvoke" then
-                return
+    
+            if rawequal(self, ObtainReviveEvent) and key == "OnClientInvoke" then
+                if not checkcaller() then
+                    return
+                end
             end
+    
             return mtHook(...)
         end)
     else
         task.defer(function()
-            while''do
+            while task.wait() do
                 ObtainReviveEvent.OnClientInvoke = OnObtainRevive
-                task.wait()
             end
         end)
     end
