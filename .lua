@@ -20,7 +20,7 @@
 local MainAccount = MainAccount or ""
 local AltAccount = AltAccount or ""
 local DuplicationCount = DuplicationAmount or 1000
-local PreventLag = PreventLag or DuplicationCount >= 1000
+local PreventLag = PreventLag == nil and DuplicationCount >= 1000 or PreventLag
 
 --// Services
 local Players = game:GetService("Players")
@@ -52,7 +52,7 @@ end
 
 -- Destroying caption event that cause lags (only when PreventLag is enabled)
 if Caption and (IsMain or IsAlt) then
-	caption:Destroy()
+	Caption:Destroy()
 end
 
 local Title = IsMain and "Revive Dupe (Main)" or "Revive Dupe (Alt)"
