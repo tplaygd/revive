@@ -19,7 +19,7 @@
 
 local MainAccount = MainAccount or ""
 local AltAccount = AltAccount or ""
-local DuplicationCount = DuplicationAmount or 1000
+local DuplicationCount = DuplicationCount or 1000
 local PreventLag = PreventLag == nil and DuplicationCount >= 1000 or PreventLag
 
 --// Services
