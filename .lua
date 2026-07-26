@@ -247,13 +247,13 @@ if Revives.Value == 0 and not IsMain then
     end
 
     if hookmetamethod then
-        local mtHook; mtHook = hookmetamethod(game, "__newindex", function(self, key, callback)
+        local mtHook; mtHook = hookmetamethod(game, "__newindex", function(...)
+			local self, key = ...
             if not checkcaller() and rawequal(self, ObtainReviveEvent) and key == "OnClientInvoke" then
-                callback = OnObtainRevive
+                return
             end
-            return mtHook(self, key, callback)
+            return mtHook(...)
         end)
-        ObtainReviveEvent.OnClientInvoke = OnObtainRevive
     else
         task.defer(function()
             while''do
@@ -307,13 +307,13 @@ if IsMain then
     end
 
     if hookmetamethod then
-        local mtHook; mtHook = hookmetamethod(game, "__newindex", function(self, key, callback)
+        local mtHook; mtHook = hookmetamethod(game, "__newindex", function(...)
+			local self, key = ...
             if not checkcaller() and rawequal(self, ObtainReviveEvent) and key == "OnClientInvoke" then
-                callback = OnObtainRevive
+                return
             end
-            return mtHook(self, key, callback)
+            return mtHook(...)
         end)
-        ObtainReviveEvent.OnClientInvoke = OnObtainRevive
     else
         task.defer(function()
             while''do
@@ -322,6 +322,8 @@ if IsMain then
             end
         end)
     end
+
+	ObtainReviveEvent.OnClientInvoke = OnObtainRevive
 
     AttemptToKillLocalPlayer()
 else
