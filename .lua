@@ -81,6 +81,7 @@ local Communication = {
 		end)
 	end,
 	OnPacket = {
+		_Amounts = {},
 		_Event = Instance.new("BindableEvent"),
 		Connect = function(self, func: (Player: Player, Packet: string) -> ()): RBXScriptConnection
 			return self._Event.Event:Connect(function(Player, Packet)
@@ -90,7 +91,7 @@ local Communication = {
 			end)
 		end,
 		WaitForAmount = function(self, Player: Player, Amount: number): ()
-			while Amount < Communication.Amounts[Player] do
+			while Amount < (self._Amounts[Player] or 0) do
 				task.wait()
 			end
 		end
@@ -99,7 +100,7 @@ local Communication = {
 
 Communication.OnPacket._Event.Event:Connect(function(Player, Packet, Amount)
 	if Packet == "_Amount" then
-		Communication.Amounts[Player] = Amount
+		Communication.OnPacket._Amounts[Player] = Amount
 	end
 end)
 
