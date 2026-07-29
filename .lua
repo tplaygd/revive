@@ -21,6 +21,7 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Debris = game:GetService("Debris")
 
 --// Remotes
 local RemotesFolder = ReplicatedStorage.RemotesFolder
@@ -246,9 +247,17 @@ end
 --// Main dupe process
 if IsMain then
     local ReviveObtainedAmount = 0
+	local Hint
     local function OnObtainRevive(...)
         if ReviveObtainedAmount >= DuplicationCount then return false end
         ReviveObtainedAmount += 1
+		Hint = Hint or Instance.new("Hint", workspace)
+		Hint.Text = `{Title}: Received revive requests: {ReviveObtaintedAmount}`
+		
+		if ReviveObtainedAmount >= DuplicationCount then
+			Hint.Text = `{Title}: Accepting all requests please wait`
+			Debris:AddItem(Hint, 10)
+		end
 
         while ReviveObtainedAmount < DuplicationCount do
             task.wait(3)
