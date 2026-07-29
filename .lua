@@ -56,8 +56,8 @@ local IsGiftingRevive = false
 --// ============================================================
 local Communication = {
 	Packets = {
-		1 = Init,
-		2 = SendReviveStandardToMe
+		"Init",
+		"SendReviveStandardToMe"
 	},
 	SendPacket = function(self, number: number)
 		if not self.Packets[number] then warn("INVALID PACKET") return end
