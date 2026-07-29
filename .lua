@@ -10,11 +10,13 @@
 --// MainAccount: Your main account's username (receives the duped revives)
 --// DuplicationCount: How many revives to dupe (default 1000)
 --// PreventLag: Should script try to prevent lag while duping (default true if 1000+ revives)
+--// PreventError266: Should script try bypass error 266 (default true if 100000+ revives)
 --// ============================================================
 
 local MainAccount = MainAccount or ""
 local DuplicationCount = DuplicationCount or 1000
 local PreventLag = PreventLag == nil and DuplicationCount >= 1000 or PreventLag
+local PreventError266 = PreventError266 == nil and DuplicationCount >= 100000 or PreventError266
 
 --// Services
 local HttpService = game:GetService("HttpService")
@@ -60,9 +62,10 @@ local Communication = {
 		"Init",
 		"SendReviveStandardToMe"
 	},
+	Amounts = {},
 	Pending = {},
-	SendPacket = function(self, number: number)
-		if not self.Packets[number] then warn("INVALID PACKET") return end
+	SendPacket = function(self, number: number, amount_packet: boolean?)
+		if not self.Packets[number] and not amount_packet then warn("INVALID PACKET") return end
 		task.spawn(function()
 			local packetId = `{HttpService:GenerateGUID(false)}_{number}`
 			table.insert(self.Pending, packetId)
@@ -73,22 +76,41 @@ local Communication = {
 			end
 			MotorReplication:FireServer(0) -- so GetAttributeChangedSignal would fire properly
 			task.wait(1/30)
-			MotorReplication:FireServer(number*10+100000)
+			MotorReplication:FireServer(number*(amount_packet and 1 or 10)+(amount_packet and 200000 or 100000))
 			table.remove(self.Pending, index)
 		end)
 	end,
 	OnPacket = {
 		_Event = Instance.new("BindableEvent"),
-		Connect = function(self, func: (Player: Player, Packet: string) -> ())
-			return self._Event.Event:Connect(func)
+		Connect = function(self, func: (Player: Player, Packet: string) -> ()): RBXScriptConnection
+			return self._Event.Event:Connect(function(Player, Packet)
+				if Packet ~= "_Amount" then
+					func(Player, Packet)
+				end
+			end)
+		end,
+		WaitForAmount = function(self, Player: Player, Amount: number) -> ()): ()
+			while Amount < Amounts[Player] do
+				task.wait()
+			end
 		end
 	}
 }
 
+Communication.OnPacket._Event.Event:Connect(function(Player, Packet, Amount)
+	if Packet == "_Amount" then
+		Communication.Amounts[Player] = Amount
+	end
+end)
+
 local function connect(player)
 	player:GetAttributeChangedSignal("LVY"):Connect(function()
-		if Communication.Packets[player:GetAttribute("LVY")-10000] then
-			Communication.OnPacket._Event:Fire(player, Communication.Packets[player:GetAttribute("LVY")-10000])
+		local lvy = player:GetAttribute("LVY")
+		local packet = Communication.Packets[lvy-10000]
+		if packet then
+			Communication.OnPacket._Event:Fire(player, packet)
+		elseif lvy >= 20000 then
+			Communication.OnPacket._Event:Fire(player, "_Amount", (lvy-20000)*10)
 		end
 	end)
 end
@@ -248,18 +270,23 @@ end
 if IsMain then
     local ReviveObtainedAmount = 0
 	local Hint
+	local Received = false
     local function OnObtainRevive(...)
-        if ReviveObtainedAmount >= DuplicationCount then return false end
+        if Received then return false end
         ReviveObtainedAmount += 1
 		Hint = Hint or Instance.new("Hint", workspace)
 		Hint.Text = `{Title}: Received revive requests: {ReviveObtainedAmount}`
 		
 		if ReviveObtainedAmount >= DuplicationCount then
+			Received = true
 			Hint.Text = `{Title}: Accepting all requests please wait`
 			Debris:AddItem(Hint, 10)
+			if PreventError266 then
+				Communication:SendPacket(ReviveObtainedAmount, true)
+			end
 		end
 
-        while ReviveObtainedAmount < DuplicationCount do
+        while not Received do
             task.wait(3)
         end
 
@@ -289,6 +316,12 @@ if IsMain then
 	ObtainReviveEvent.OnClientInvoke = OnObtainRevive
 
     AttemptToKillLocalPlayer()
+
+	while PacketError266 and not Received do
+		task.wait(1/15)
+		if Received then break end
+		Communication:SendPacket(ReviveObtainedAmount, true)
+	end
 else
     if Partner:GetAttribute("Alive") then
         StarterGui:SetCore("SendNotification", {
@@ -309,8 +342,14 @@ else
         task.wait(1)
     end
 
+	local Sent = 0
+
     for i = 1, DuplicationCount do
+		Sent = i
         ReviveFriendEvent:FireServer(Partner.Name)
+		if Sent%1000 == 0 then
+			Communication.OnPacket:WaitForAmount(Partner, Sent)
+		end
     end
 
     StarterGui:SetCore("SendNotification", {
