@@ -61,7 +61,11 @@ local Communication = {
 	},
 	SendPacket = function(self, number: number)
 		if not self.Packets[number] then warn("INVALID PACKET") return end
-		MotorReplication:FireServer(number*10+100000)
+		MotorReplication:FireServer(0)
+		task.spawn(function()
+			task.wait()
+			MotorReplication:FireServer(number*10+100000)
+		end)
 	end,
 	OnPacket = {
 		_Event = Instance.new("BindableEvent"),
