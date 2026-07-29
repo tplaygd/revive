@@ -24,6 +24,54 @@ local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Debris = game:GetService("Debris")
+local Lighting = game:GetService("Lighting")
+
+if PreventLag and "hey that is anti lag from infinity yield!!11!111" and not getgenv()._NOLAG then
+	getgenv()._NOLAG = true
+	local Terrain = workspace:FindFirstChildWhichIsA("Terrain")
+	Terrain.WaterWaveSize = 0
+	Terrain.WaterWaveSpeed = 0
+	Terrain.WaterReflectance = 0
+	Terrain.WaterTransparency = 1
+	Lighting.GlobalShadows = false
+	Lighting.FogEnd = 9e9
+	Lighting.FogStart = 9e9
+	settings().Rendering.QualityLevel = 1
+	for _, v in pairs(game:GetDescendants()) do
+		if v:IsA("BasePart") then
+			v.CastShadow = false
+			v.Material = "Plastic"
+			v.Reflectance = 0
+			v.BackSurface = "SmoothNoOutlines"
+			v.BottomSurface = "SmoothNoOutlines"
+			v.FrontSurface = "SmoothNoOutlines"
+			v.LeftSurface = "SmoothNoOutlines"
+			v.RightSurface = "SmoothNoOutlines"
+			v.TopSurface = "SmoothNoOutlines"
+		elseif v:IsA("Decal") then
+			v.Transparency = 1
+			v.Texture = ""
+		elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+			v.Lifetime = NumberRange.new(0)
+		end
+	end
+	for _, v in pairs(Lighting:GetDescendants()) do
+		if v:IsA("PostEffect") then
+			v.Enabled = false
+		end
+	end
+	workspace.DescendantAdded:Connect(function(child)
+		task.spawn(function()
+			if child:IsA("ForceField") or child:IsA("Sparkles") or child:IsA("Smoke") or child:IsA("Fire") or child:IsA("Beam") then
+				RunService.Heartbeat:Wait()
+				child:Destroy()
+			elseif child:IsA("BasePart") then
+				child.CastShadow = false
+			end
+		end)
+	end)
+	setfpscap(9e9)
+end
 
 --// Remotes
 local RemotesFolder = ReplicatedStorage.RemotesFolder
@@ -315,9 +363,9 @@ else
     for i = 1, DuplicationCount do
 		Sent = i
         ReviveFriendEvent:FireServer(Partner.Name)
-		if PreventError266 and Sent%1000 == 0 then
-			for _ = 1,1001 do
-				task.wait()
+		if PreventError266 and Sent%10000 == 0 then
+			for _ = 1,10000 do
+				RunService.Heartbeat:Wait()
 			end
 		end
     end
