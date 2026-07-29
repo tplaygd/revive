@@ -62,10 +62,9 @@ local Communication = {
 		"Init",
 		"SendReviveStandardToMe"
 	},
-	Amounts = {},
 	Pending = {},
-	SendPacket = function(self, number: number, amount_packet: boolean?)
-		if not self.Packets[number] and not amount_packet then warn("INVALID PACKET") return end
+	SendPacket = function(self, number: number)
+		if not self.Packets[number] then warn("INVALID PACKET") return end
 		task.spawn(function()
 			local packetId = `{HttpService:GenerateGUID(false)}_{number}`
 			table.insert(self.Pending, packetId)
@@ -76,42 +75,22 @@ local Communication = {
 			end
 			MotorReplication:FireServer(0) -- so GetAttributeChangedSignal would fire properly
 			task.wait(1/30)
-			MotorReplication:FireServer(number*(amount_packet and 1 or 10)+(amount_packet and 200000 or 100000))
+			MotorReplication:FireServer(number*10+100000)
 			table.remove(self.Pending, index)
 		end)
 	end,
 	OnPacket = {
-		_Amounts = {},
 		_Event = Instance.new("BindableEvent"),
-		Connect = function(self, func: (Player: Player, Packet: string) -> ()): RBXScriptConnection
-			return self._Event.Event:Connect(function(Player, Packet)
-				if Packet ~= "_Amount" then
-					func(Player, Packet)
-				end
-			end)
-		end,
-		WaitForAmount = function(self, Player: Player, Amount: number): ()
-			while Amount < (self._Amounts[Player] or 0) do
-				task.wait()
-			end
+		Connect = function(self, func: (Player: Player, Packet: string) -> ())
+			return self._Event.Event:Connect(func)
 		end
 	}
 }
 
-Communication.OnPacket._Event.Event:Connect(function(Player, Packet, Amount)
-	if Packet == "_Amount" then
-		Communication.OnPacket._Amounts[Player] = Amount
-	end
-end)
-
 local function connect(player)
 	player:GetAttributeChangedSignal("LVY"):Connect(function()
-		local lvy = player:GetAttribute("LVY")
-		local packet = Communication.Packets[lvy-10000]
-		if packet then
-			Communication.OnPacket._Event:Fire(player, packet)
-		elseif lvy >= 20000 then
-			Communication.OnPacket._Event:Fire(player, "_Amount", (lvy-20000)*10)
+		if Communication.Packets[player:GetAttribute("LVY")-10000] then
+			Communication.OnPacket._Event:Fire(player, Communication.Packets[player:GetAttribute("LVY")-10000])
 		end
 	end)
 end
@@ -271,27 +250,18 @@ end
 if IsMain then
     local ReviveObtainedAmount = 0
 	local Hint
-	local Received = false
     local function OnObtainRevive(...)
-        if Received then return false end
+        if ReviveObtainedAmount >= DuplicationCount then return false end
         ReviveObtainedAmount += 1
 		Hint = Hint or Instance.new("Hint", workspace)
 		Hint.Text = `{Title}: Received revive requests: {ReviveObtainedAmount}`
-
-		if ReviveObtainedAmount%1000 == 0 then
-			Communication:SendPacket(ReviveObtainedAmount, true)
-		end
 		
 		if ReviveObtainedAmount >= DuplicationCount then
-			Received = true
 			Hint.Text = `{Title}: Accepting all requests please wait`
 			Debris:AddItem(Hint, 10)
-			if PreventError266 then
-				Communication:SendPacket(ReviveObtainedAmount, true)
-			end
 		end
 
-        while not Received do
+        while ReviveObtainedAmount < DuplicationCount do
             task.wait(3)
         end
 
@@ -342,12 +312,13 @@ else
     end
 
 	local Sent = 0
-
     for i = 1, DuplicationCount do
 		Sent = i
         ReviveFriendEvent:FireServer(Partner.Name)
-		if Sent%1000 == 0 then
-			Communication.OnPacket:WaitForAmount(Partner, Sent)
+		if PreventError266 and Sent%1000 == 0 then
+			for _ = 1,1001 do
+				task.wait()
+			end
 		end
     end
 
