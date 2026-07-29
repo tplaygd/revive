@@ -252,7 +252,7 @@ if IsMain then
         if ReviveObtainedAmount >= DuplicationCount then return false end
         ReviveObtainedAmount += 1
 		Hint = Hint or Instance.new("Hint", workspace)
-		Hint.Text = `{Title}: Received revive requests: {ReviveObtaintedAmount}`
+		Hint.Text = `{Title}: Received revive requests: {ReviveObtainedAmount}`
 		
 		if ReviveObtainedAmount >= DuplicationCount then
 			Hint.Text = `{Title}: Accepting all requests please wait`
