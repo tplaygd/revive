@@ -7,9 +7,7 @@ Original revive duper script by upio.
 2. Create elevator with main and alt account and press start
 3. When both accounts loaded in execute this script on both accounts (you can execute at door 0):
 ```lua
--- if no main account or alt account provided the script will use chat fallback
-MainAccount = "MAIN ACCOUNT NAME"
-AltAccount = "ALT ACCOUNT NAME"
+MainAccount = "MAIN ACCOUNT NAME" -- this account will receive revives
 DuplicationCount = 1000 -- how many revives to dupe
 PreventLag = true -- if you set big duplication count you should set this to true
 
