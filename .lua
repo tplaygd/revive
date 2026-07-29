@@ -8,17 +8,11 @@
 --// CONFIGURATION
 --// ============================================================
 --// MainAccount: Your main account's username (receives the duped revives)
---// AltAccount:  Your alt account's username (used to dupe revives)
---//   - If left as "", the script will auto-detect the other player
---//     in-server who is also running this script (chat-based fallback)
---//   - If set, no chat communication is needed — everything is
---//     coordinated by timing and attribute polling
 --// DuplicationCount: How many revives to dupe (default 1000)
 --// PreventLag: Should script try to prevent lag while duping (default true if 1000+ revives)
 --// ============================================================
 
 local MainAccount = MainAccount or ""
-local AltAccount = AltAccount or ""
 local DuplicationCount = DuplicationCount or 1000
 local PreventLag = PreventLag == nil and DuplicationCount >= 1000 or PreventLag
 
@@ -32,23 +26,19 @@ local VirtualInputManager = Instance.new("VirtualInputManager")
 local RemotesFolder = ReplicatedStorage.RemotesFolder
 local ReviveFriendEvent = RemotesFolder.ReviveFriend
 local ObtainReviveEvent = RemotesFolder.ObtainGiftedRevive
+local MotorReplication = RemotesFolder.MotorReplication
 local Caption = PreventLag and RemotesFolder.Caption
 
 --// Player Variables
 local LocalPlayer = Players.LocalPlayer
-local Partner -- The other account (alt or main depending on who we are)
+local Partner
 
 --// Game Data
 local Revives = LocalPlayer.PlayerGui.TopbarUI.Topbar.StatsTopbarHandler.StatModules.Revives.RevivesVal
 
 --// Determine role
 local IsMain = (MainAccount ~= "" and LocalPlayer.Name == MainAccount)
-local IsAlt = (AltAccount ~= "" and LocalPlayer.Name == AltAccount)
-
--- If neither name matches but MainAccount is set, assume we're the alt
-if MainAccount ~= "" and not IsMain and not IsAlt then
-    IsAlt = true
-end
+local IsAlt = not IsMain
 
 -- Destroying caption event that cause lags (only when PreventLag is enabled)
 if Caption and (IsMain or IsAlt) then
@@ -62,74 +52,43 @@ local IsPartnerReady = false
 local IsGiftingRevive = false
 
 --// ============================================================
---// PARTNER DETECTION
+--// COMMUNICATION THROUGH MOTOR REPLICATION
 --// ============================================================
--- Uses direct name-based detection when AltAccount/MainAccount are
--- configured. No chat required.
-local UseChatFallback = (MainAccount == "" and AltAccount == "")
+local Communication = {
+	Packets = {
+		1 = Init,
+		2 = SendReviveStandardToMe
+	},
+	SendPacket = function(self, number: number)
+		if not self.Packets[number] then warn("INVALID PACKET") return end
+		MotorReplication:FireServer(number*10+100000)
+	end,
+	OnPacket = {
+		_Event = Instance.new("BindableEvent"),
+		Connect = function(self, func: (Player: Player, Packet: string) -> ())
+			return self._Event.Event:Connect(func)
+		end
+	}
+}
 
-local function FindPartnerByName()
-    local targetName = IsMain and AltAccount or MainAccount
-    if targetName == "" then return nil end
-    return Players:FindFirstChild(targetName)
+local function connect(player)
+	player:GetAttributeChangedSignal("LVY"):Connect(function()
+		if Communication.Packets[player:GetAttribute("LVY")-10000] then
+			Communication.OnPacket._Event:Fire(player, Communication.Packets[player:GetAttribute("LVY")-10000])
+		end
+	end)
 end
 
-local function WaitForPartner()
-    -- Try to find the partner immediately
-    Partner = FindPartnerByName()
-    if Partner then
-        IsPartnerReady = true
-        return
-    end
-
-    -- Wait for them to join
-    StarterGui:SetCore("SendNotification", {
-        Title = Title,
-        Text = `Waiting for {IsMain and "alt" or "main"} account to join...`,
-        Duration = 10
-    })
-
-    local targetName = IsMain and AltAccount or MainAccount
-    local conn
-    conn = Players.PlayerAdded:Connect(function(player)
-        if player.Name == targetName then
-            Partner = player
-            IsPartnerReady = true
-            conn:Disconnect()
-        end
-    end)
-
-    repeat task.wait() until IsPartnerReady
+for _, player in Players:GetPlayers() do
+	connect(player)
 end
+Players.PlayerAdded:Connect(connect)
 
---// ============================================================
---// CHAT FALLBACK (only used if both MainAccount and AltAccount are empty)
---// ============================================================
-if UseChatFallback then
-    local TextChatService = game:GetService("TextChatService")
-    local Communication = TextChatService.TextChannels.RBXGeneral
-    local PacketPrefix = "ReviveDupe_"
-
-    local function SendPacket(PacketName)
-        local PacketData = `{PacketPrefix}{PacketName}`
-        Communication:SendAsync("", PacketData)
-        return PacketData
-    end
-
-    TextChatService.MessageReceived:Connect(function(message: TextChatMessage)
-        local packetData = message.Metadata
-        local textSource = message.TextSource
-
-        if
-            not packetData or not textSource or
-            packetData:sub(1, #PacketPrefix) ~= PacketPrefix or
-            textSource.UserId == LocalPlayer.UserId
-        then
+if true then
+	Communication.OnPacket:Connect(function(sender, packetName)
+        if sender == LocalPlayer then
             return
         end
-
-        local sender = Players:GetPlayerByUserId(textSource.UserId)
-        local packetName = packetData:sub(#PacketPrefix + 1)
 
         if packetName == "Init" then
             if IsPartnerReady then
@@ -139,7 +98,7 @@ if UseChatFallback then
             IsPartnerReady = true
             Partner = sender
 
-            SendPacket("Init")
+            Communication:SendPacket(1)
 
             StarterGui:SetCore("SendNotification", {
                 Title = Title,
@@ -176,7 +135,7 @@ if UseChatFallback then
         end
     end)
 
-    SendPacket("Init")
+    Communication:SendPacket(1)
 
     StarterGui:SetCore("SendNotification", {
         Title = Title,
@@ -185,22 +144,13 @@ if UseChatFallback then
     })
 
     repeat task.wait() until IsPartnerReady
-else
-    --// Name-based detection — no chat needed
-    WaitForPartner()
-
-    StarterGui:SetCore("SendNotification", {
-        Title = Title,
-        Text = `{Partner.Name} found in server, starting dupe process...`,
-        Duration = 5
-    })
 end
 
 --// ============================================================
 --// HELPER FUNCTIONS
 --// ============================================================
 local function AttemptToKillLocalPlayer()
-    (LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()):WaitForChild("Humanoid", 9e9).Health = 0 -- this method is not patched now
+    (LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()):WaitForChild("Humanoid", 9e9).Health = 0 -- this method works again
 
     StarterGui:SetCore("SendNotification", {
         Title = Title,
@@ -216,18 +166,7 @@ end
 --// Alt account needs 1 revive gifted to it first
 if Revives.Value == 0 and not IsMain then
     if UseChatFallback then
-        -- Chat mode: tell the main account to send us a revive
-        local TextChatService = game:GetService("TextChatService")
-        local Communication = TextChatService.TextChannels.RBXGeneral
-        Communication:SendAsync("", "ReviveDupe_SendReviveStandardToMe")
-    else
-        -- Name-based mode: the main account will detect we're dead and
-        -- gift us a revive automatically after a short delay
-        StarterGui:SetCore("SendNotification", {
-            Title = Title,
-            Text = "Need a revive — main account will gift one automatically.",
-            Duration = 5
-        })
+        Communication:SendPacket(2)
     end
 
     IsGiftingRevive = true
@@ -288,19 +227,6 @@ task.wait(5)
 
 --// If we're in the middle of gifting a revive, don't continue
 if IsGiftingRevive then
-    return
-end
-
---// In name-based mode: if the alt has 0 revives, gift one first
-if not UseChatFallback and IsMain and Partner:GetAttribute("Alive") ~= true then
-    task.wait(2.5)
-    ReviveFriendEvent:FireServer(Partner.Name)
-
-    StarterGui:SetCore("SendNotification", {
-        Title = Title,
-        Text = "Gifted a revive to alt account. They will rejoin shortly.",
-        Duration = 5
-    })
     return
 end
 
