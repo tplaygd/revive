@@ -19,6 +19,7 @@ local PreventLag = PreventLag == nil and DuplicationCount >= 1000 or PreventLag
 local PreventError266 = PreventError266 == nil and DuplicationCount >= 100000 or PreventError266
 
 --// Services
+local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
