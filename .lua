@@ -90,7 +90,7 @@ local Communication = {
 			end)
 		end,
 		WaitForAmount = function(self, Player: Player, Amount: number): ()
-			while Amount < Amounts[Player] do
+			while Amount < Communication.Amounts[Player] do
 				task.wait()
 			end
 		end
