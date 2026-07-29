@@ -276,6 +276,10 @@ if IsMain then
         ReviveObtainedAmount += 1
 		Hint = Hint or Instance.new("Hint", workspace)
 		Hint.Text = `{Title}: Received revive requests: {ReviveObtainedAmount}`
+
+		if ReviveObtainedAmount%1000 == 0 then
+			Communication:SendPacket(ReviveObtainedAmount, true)
+		end
 		
 		if ReviveObtainedAmount >= DuplicationCount then
 			Received = true
@@ -316,12 +320,6 @@ if IsMain then
 	ObtainReviveEvent.OnClientInvoke = OnObtainRevive
 
     AttemptToKillLocalPlayer()
-
-	while PacketError266 and not Received do
-		task.wait(1/15)
-		if Received then break end
-		Communication:SendPacket(ReviveObtainedAmount, true)
-	end
 else
     if Partner:GetAttribute("Alive") then
         StarterGui:SetCore("SendNotification", {
