@@ -298,10 +298,12 @@ end
 --// Main dupe process
 if IsMain then
     local ReviveObtainedAmount = 0
+	local AcceptedAmount = 0
 	local Hint
     local function OnObtainRevive(...)
         if ReviveObtainedAmount >= DuplicationCount then return false end
         ReviveObtainedAmount += 1
+		
 		Hint = Hint or Instance.new("Hint", workspace)
 		Hint.Text = `{Title}: Received revive requests: {ReviveObtainedAmount}`
 		
@@ -313,6 +315,13 @@ if IsMain then
         while ReviveObtainedAmount < DuplicationCount do
             task.wait(3)
         end
+
+		AcceptedAmount += 1
+		if PreventError266 and AcceptedAmount%1000 == 0 then
+			for _ = 1,333 do
+				RunService.Heartbeat:Wait()
+			end
+		end
 
         return true
     end
@@ -365,7 +374,7 @@ else
 		Sent = i
         ReviveFriendEvent:FireServer(Partner.Name)
 		if PreventError266 and Sent%10000 == 0 then
-			for _ = 1,1000 do
+			for _ = 1,1010 do
 				RunService.Heartbeat:Wait()
 			end
 		end
