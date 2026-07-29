@@ -365,7 +365,7 @@ else
 		Sent = i
         ReviveFriendEvent:FireServer(Partner.Name)
 		if PreventError266 and Sent%10000 == 0 then
-			for _ = 1,10000 do
+			for _ = 1,1000 do
 				RunService.Heartbeat:Wait()
 			end
 		end
