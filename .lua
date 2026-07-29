@@ -17,10 +17,10 @@ local DuplicationCount = DuplicationCount or 1000
 local PreventLag = PreventLag == nil and DuplicationCount >= 1000 or PreventLag
 
 --// Services
+local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualInputManager = Instance.new("VirtualInputManager")
 
 --// Remotes
 local RemotesFolder = ReplicatedStorage.RemotesFolder
@@ -59,12 +59,21 @@ local Communication = {
 		"Init",
 		"SendReviveStandardToMe"
 	},
+	Pending = {},
 	SendPacket = function(self, number: number)
 		if not self.Packets[number] then warn("INVALID PACKET") return end
-		MotorReplication:FireServer(0)
 		task.spawn(function()
-			task.wait()
+			local packetId = `{HttpService:GenerateGUID(false)}_{number}`
+			table.insert(self.Pending, packetId)
+			local index = table.find(self.Pending, packetId)
+			while index and index > 1 do task.wait() end
+			if not index then
+				return -- the packet was cancelled :(
+			end
+			MotorReplication:FireServer(0) -- so GetAttributeChangedSignal would fire properly
+			task.wait(1/30)
 			MotorReplication:FireServer(number*10+100000)
+			table.remove(self.Pending, index)
 		end)
 	end,
 	OnPacket = {
