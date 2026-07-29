@@ -318,7 +318,7 @@ if IsMain then
 
 		AcceptedAmount += 1
 		if PreventError266 and AcceptedAmount%1000 == 0 then
-			for _ = 1,333 do
+			for _ = 1,500 do
 				RunService.Heartbeat:Wait()
 			end
 		end
@@ -373,8 +373,8 @@ else
     for i = 1, DuplicationCount do
 		Sent = i
         ReviveFriendEvent:FireServer(Partner.Name)
-		if PreventError266 and Sent%10000 == 0 then
-			for _ = 1,1010 do
+		if PreventError266 and Sent%1000 == 0 then
+			for _ = 1,250 do
 				RunService.Heartbeat:Wait()
 			end
 		end
