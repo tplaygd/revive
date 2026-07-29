@@ -27,7 +27,7 @@ local RemotesFolder = ReplicatedStorage.RemotesFolder
 local ReviveFriendEvent = RemotesFolder.ReviveFriend
 local ObtainReviveEvent = RemotesFolder.ObtainGiftedRevive
 local MotorReplication = RemotesFolder.MotorReplication
-local Caption = PreventLag and RemotesFolder.Caption
+local Caption = PreventLag and RemotesFolder:FindFirstChild("Caption")
 
 --// Player Variables
 local LocalPlayer = Players.LocalPlayer
