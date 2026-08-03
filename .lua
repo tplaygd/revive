@@ -79,6 +79,7 @@ local RemotesFolder = ReplicatedStorage.RemotesFolder
 local ReviveFriendEvent = RemotesFolder.ReviveFriend
 local ObtainReviveEvent = RemotesFolder.ObtainGiftedRevive
 local MotorReplication = RemotesFolder.MotorReplication
+local PingRemote = RemotesFolder.PingRemote
 local Caption = PreventLag and RemotesFolder:FindFirstChild("Caption")
 
 --// Player Variables
@@ -86,7 +87,7 @@ local LocalPlayer = Players.LocalPlayer
 local Partner
 
 --// Game Data
-local Revives = LocalPlayer.PlayerGui.TopbarUI.Topbar.StatsTopbarHandler.StatModules.Revives.RevivesVal
+local Revives = require(ReplicatedStorage.ReplicaDataModule).data.Revives or 0
 
 --// Determine role
 local IsMain = (MainAccount ~= "" and LocalPlayer.Name == MainAccount)
@@ -114,6 +115,7 @@ local Communication = {
 	Pending = {},
 	SendPacket = function(self, number: number)
 		if not self.Packets[number] then warn("INVALID PACKET") return end
+        warn(self.Packets[number])
 		task.spawn(function()
 			local packetId = `{HttpService:GenerateGUID(false)}_{number}`
 			table.insert(self.Pending, packetId)
@@ -155,28 +157,33 @@ if true then
             return
         end
 
-        if packetName == "Init" then
-            if IsPartnerReady then
-                return
-            end
+        if IsPartnerReady then
+            return
+        end
 
+        if packetName == "Init" then
             IsPartnerReady = true
             Partner = sender
 
-            Communication:SendPacket(1)
+            Communication:SendPacket(Revives == 0 and IsAlt and 2 or 1)
 
             StarterGui:SetCore("SendNotification", {
                 Title = Title,
                 Text = `{sender.Name} initialized, starting dupe process...`,
                 Duration = 5
             })
-        end
+        elseif packetName == "SendReviveStandardToMe" then
+            IsPartnerReady = true
+            Partner = sender
 
-        if not IsPartnerReady then
-            return
-        end
+            Communication:SendPacket(Revives == 0 and IsAlt and 2 or 1)
 
-        if packetName == "SendReviveStandardToMe" then
+            StarterGui:SetCore("SendNotification", {
+                Title = Title,
+                Text = `{sender.Name} initialized, starting transferring process...`,
+                Duration = 5
+            })
+
             IsGiftingRevive = true
 
             if Partner:GetAttribute("Alive") == true then
@@ -194,13 +201,13 @@ if true then
 
             StarterGui:SetCore("SendNotification", {
                 Title = Title,
-                Text = "Revive sent to alt account. Now rejoin a new game with your alt account.",
+                Text = "Revive sent to alt account. Now execute the script again to dupe revives.",
                 Duration = 5
             })
         end
     end)
 
-    Communication:SendPacket(1)
+    Communication:SendPacket(Revives == 0 and IsAlt and 2 or 1)
 
     StarterGui:SetCore("SendNotification", {
         Title = Title,
@@ -228,12 +235,8 @@ end
 --// MAIN LOGIC
 --// ============================================================
 
---// Alt account needs 1 revive gifted to it first
-if Revives.Value == 0 and not IsMain then
-    if UseChatFallback then
-        Communication:SendPacket(2)
-    end
-
+--// Alt account needs 1 revive gifted to it first (the request is already sent so we don't need communication there)
+if Revives == 0 and IsAlt then
     IsGiftingRevive = true
     AttemptToKillLocalPlayer()
 
@@ -276,8 +279,12 @@ if Revives.Value == 0 and not IsMain then
 	while not obtained do
 		task.wait()
 	end
-	task.wait()
-	game:Shutdown()
+
+    StarterGui:SetCore("SendNotification", {
+        Title = Title,
+        Text = "Transfer complete! execute the script again to dupe revives",
+        Duration = 5
+    })
 
     return
 end
@@ -300,27 +307,30 @@ if IsMain then
     local ReviveObtainedAmount = 0
 	local AcceptedAmount = 0
 	local Hint
+    local ImporantBool = Instance.new("BoolValue")
     local function OnObtainRevive(...)
         if ReviveObtainedAmount >= DuplicationCount then return false end
         ReviveObtainedAmount += 1
 		
 		Hint = Hint or Instance.new("Hint", workspace)
-		Hint.Text = `{Title}: Received revive requests: {ReviveObtainedAmount}`
+		Hint.Text = `{Title}: Received revive requests: {ReviveObtainedAmount}/{DuplicationCount}`
 		
 		if ReviveObtainedAmount >= DuplicationCount then
+            ImporantBool.Value = not ImporantBool.Value -- continue all yielded gifts
 			Hint.Text = `{Title}: Accepting all requests please wait`
 			Debris:AddItem(Hint, 10)
-		end
-
-        while ReviveObtainedAmount < DuplicationCount do
-            task.wait(3)
+            Debris:AddItem(ImporantBool, 10)
+			if PreventError266 then
+				task.wait(math.random(1,1000)/100) -- yea
+			end
+		else
+            ImporantBool:GetPropertyChangedSignal("Value"):Wait() -- yield until not finished
         end
 
 		AcceptedAmount += 1
-		if PreventError266 and AcceptedAmount%1000 == 0 then
-			for _ = 1,500 do
-				RunService.Heartbeat:Wait()
-			end
+		if PreventError266 and AcceptedAmount%10000 == 0 then
+			PingRemote.OnClientEvent:Wait()
+            PingRemote.OnClientEvent:Wait()
 		end
 
         return true
@@ -373,10 +383,8 @@ else
     for i = 1, DuplicationCount do
 		Sent = i
         ReviveFriendEvent:FireServer(Partner.Name)
-		if PreventError266 and Sent%1000 == 0 then
-			for _ = 1,250 do
-				RunService.Heartbeat:Wait()
-			end
+		if PreventError266 and Sent%10000 == 0 then
+			PingRemote.OnClientEvent:Wait()
 		end
     end
 
