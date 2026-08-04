@@ -254,6 +254,7 @@ if IsGiftingRevive then
 end
 
 --// Main dupe process
+local pingAfter = math.floor(1/3*1000)
 if IsMain then
     local ReviveObtainedAmount = 0
 	local AcceptedAmount = 0
@@ -277,8 +278,8 @@ if IsMain then
         end
 
 		AcceptedAmount += 1
-		if AcceptedAmount >= 1000 then
-			AcceptedAmount -= 1000
+		if AcceptedAmount >= pingAfter then
+			AcceptedAmount -= pingAfter
 			PingRemote.OnClientEvent:Wait()
 		end
 
@@ -330,7 +331,7 @@ else
 
 	for i = 1, DuplicationCount do
 		ReviveFriendEvent:FireServer(Partner.Name)
-		if i%10000 == 0 then
+		if i%pingAfter == 0 then
 			PingRemote.OnClientEvent:Wait()
 		end
     end
