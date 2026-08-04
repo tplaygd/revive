@@ -9,8 +9,6 @@ Original revive duper script by upio.
 ```lua
 MainAccount = "MAIN ACCOUNT NAME" -- this account will receive revives
 DuplicationCount = 1000 -- how many revives to dupe
-PreventLag = DuplicationCount >= 1000 -- if you set big duplication count you should set this to true
-PreventError266 = DuplicationCount >= 100000 -- if you set really big duplication count you should set this to true
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/tplaygd/revive/refs/heads/main/.lua"))()
 ```
