@@ -15,8 +15,6 @@
 
 local MainAccount = MainAccount or ""
 local DuplicationCount = DuplicationCount or 1000
-local PreventLag = PreventLag == nil and DuplicationCount >= 1000 or PreventLag
-local PreventError266 = PreventError266 == nil and DuplicationCount >= 100000 or PreventError266
 
 --// Services
 local RunService = game:GetService("RunService")
@@ -27,60 +25,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Debris = game:GetService("Debris")
 local Lighting = game:GetService("Lighting")
 
-if PreventLag and "hey that is anti lag from infinity yield!!11!111" and not getgenv()._NOLAG then
-	getgenv()._NOLAG = true
-	local Terrain = workspace:FindFirstChildWhichIsA("Terrain")
-	Terrain.WaterWaveSize = 0
-	Terrain.WaterWaveSpeed = 0
-	Terrain.WaterReflectance = 0
-	Terrain.WaterTransparency = 1
-	Lighting.GlobalShadows = false
-	Lighting.FogEnd = 9e9
-	Lighting.FogStart = 9e9
-	settings().Rendering.QualityLevel = 1
-	for _, v in pairs(game:GetDescendants()) do
-		if v:IsA("BasePart") then
-			v.CastShadow = false
-			v.Material = "Plastic"
-			v.Reflectance = 0
-			v.BackSurface = "SmoothNoOutlines"
-			v.BottomSurface = "SmoothNoOutlines"
-			v.FrontSurface = "SmoothNoOutlines"
-			v.LeftSurface = "SmoothNoOutlines"
-			v.RightSurface = "SmoothNoOutlines"
-			v.TopSurface = "SmoothNoOutlines"
-		elseif v:IsA("Decal") then
-			v.Transparency = 1
-			v.Texture = ""
-		elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
-			v.Lifetime = NumberRange.new(0)
-		end
-	end
-	for _, v in pairs(Lighting:GetDescendants()) do
-		if v:IsA("PostEffect") then
-			v.Enabled = false
-		end
-	end
-	workspace.DescendantAdded:Connect(function(child)
-		task.spawn(function()
-			if child:IsA("ForceField") or child:IsA("Sparkles") or child:IsA("Smoke") or child:IsA("Fire") or child:IsA("Beam") then
-				RunService.Heartbeat:Wait()
-				child:Destroy()
-			elseif child:IsA("BasePart") then
-				child.CastShadow = false
-			end
-		end)
-	end)
-	setfpscap(9e9)
-end
-
 --// Remotes
 local RemotesFolder = ReplicatedStorage.RemotesFolder
 local ReviveFriendEvent = RemotesFolder.ReviveFriend
 local ObtainReviveEvent = RemotesFolder.ObtainGiftedRevive
 local MotorReplication = RemotesFolder.MotorReplication
 local PingRemote = RemotesFolder.PingRemote
-local Caption = PreventLag and RemotesFolder:FindFirstChild("Caption")
+local Caption = RemotesFolder:FindFirstChild("Caption")
 
 --// Player Variables
 local LocalPlayer = Players.LocalPlayer
@@ -93,11 +44,13 @@ local Revives = require(ReplicatedStorage.ReplicaDataModule).data.Revives or 0
 local IsMain = (MainAccount ~= "" and LocalPlayer.Name == MainAccount)
 local IsAlt = not IsMain
 
--- Destroying caption event that cause lags (only when PreventLag is enabled)
+--// Optimization
 if Caption and (IsMain or IsAlt) then
 	Caption:Destroy()
 end
+setfpscap(9e9)
 
+-- very cool title
 local Title = IsMain and "Revive Dupe (Main)" or "Revive Dupe (Alt)"
 
 --// State
@@ -320,17 +273,15 @@ if IsMain then
 			Hint.Text = `{Title}: Accepting all requests please wait`
 			Debris:AddItem(Hint, 10)
             Debris:AddItem(ImporantBool, 10)
-			if PreventError266 then
-				task.wait(math.random(1,1000)/100) -- yea
-			end
+			task.wait(math.random(1,10000)/1000) -- yea
 		else
             ImporantBool:GetPropertyChangedSignal("Value"):Wait() -- yield until not finished
         end
 
 		AcceptedAmount += 1
-		if PreventError266 and AcceptedAmount%10000 == 0 then
+		if AcceptedAmount >= 1000 then
+			AcceptedAmount -= 1000
 			PingRemote.OnClientEvent:Wait()
-            PingRemote.OnClientEvent:Wait()
 		end
 
         return true
@@ -379,11 +330,9 @@ else
         task.wait(1)
     end
 
-	local Sent = 0
-    for i = 1, DuplicationCount do
-		Sent = i
-        ReviveFriendEvent:FireServer(Partner.Name)
-		if PreventError266 and Sent%10000 == 0 then
+	for i = 1, DuplicationCount do
+		ReviveFriendEvent:FireServer(Partner.Name)
+		if i%10000 == 0 then
 			PingRemote.OnClientEvent:Wait()
 		end
     end
