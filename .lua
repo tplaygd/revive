@@ -9,8 +9,6 @@
 --// ============================================================
 --// MainAccount: Your main account's username (receives the duped revives)
 --// DuplicationCount: How many revives to dupe (default 1000)
---// PreventLag: Should script try to prevent lag while duping (default true if 1000+ revives)
---// PreventError266: Should script try bypass error 266 (default true if 100000+ revives)
 --// ============================================================
 
 local MainAccount = MainAccount or ""
