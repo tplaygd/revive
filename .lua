@@ -255,6 +255,7 @@ end
 
 --// Main dupe process
 local pingAfter = math.floor(2/3*1000)
+local pingAfter2 = math.floor(pingAfter/133)
 if IsMain then
     local ReviveObtainedAmount = 0
 	local AcceptedAmount = 0
@@ -278,8 +279,8 @@ if IsMain then
         end
 
 		AcceptedAmount += 1
-		if AcceptedAmount >= pingAfter then
-			AcceptedAmount -= pingAfter
+		if AcceptedAmount >= pingAfter2 then
+			AcceptedAmount -= pingAfter2
 			PingRemote.OnClientEvent:Wait()
 		end
 
