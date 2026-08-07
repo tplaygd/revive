@@ -254,7 +254,7 @@ if IsGiftingRevive then
 end
 
 --// Main dupe process
-local pingAfter = math.floor(1/3*1000)
+local pingAfter = math.floor(2/3*1000)
 if IsMain then
     local ReviveObtainedAmount = 0
 	local AcceptedAmount = 0
