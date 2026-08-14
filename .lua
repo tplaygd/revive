@@ -8,7 +8,8 @@
 --// CONFIGURATION
 --// ============================================================
 --// MainAccount: Your main account's username (receives the duped revives)
---// DuplicationCount: How many revives to dupe (default 1000)
+--// DuplicationCount: How many revives to dupe (default 1000, overridden by DuplicationGoal if specified)
+--// DuplicationGoal: How many revives you should have (optional)
 --// ============================================================
 
 local MainAccount = MainAccount or ""
@@ -37,6 +38,13 @@ local Partner
 
 --// Game Data
 local Revives = require(ReplicatedStorage.ReplicaDataModule).data.Revives or 0
+
+--// DuplicationGoal check
+if DuplicationGoal and Revives < DuplicationGoal then
+	DuplicationCount = DuplicationGoal-Revives
+else
+	error("DuplicationGoal is less or equals to amount of Revives you have.")
+end
 
 --// Determine role
 local IsMain = (MainAccount ~= "" and LocalPlayer.Name == MainAccount)
