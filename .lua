@@ -271,7 +271,7 @@ end
 local function ping()
 	local start = os.clock()
 	RequestLocalAsset:InvokeServer({{}})
-	return math.clamp(math.floor((os.clock()-start)*1010), 1000, 1)
+	return math.clamp(math.floor((os.clock()-start)*1010), 1, 1000)
 end
 
 local function toHMS(seconds)
