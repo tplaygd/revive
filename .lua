@@ -42,7 +42,7 @@ local Revives = require(ReplicatedStorage.ReplicaDataModule).data.Revives or 0
 --// DuplicationGoal check
 if DuplicationGoal and Revives < DuplicationGoal then
 	DuplicationCount = DuplicationGoal-Revives
-else
+elseif DuplicationGoal then
 	error("DuplicationGoal is less or equals to amount of Revives you have.")
 end
 
