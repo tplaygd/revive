@@ -28,7 +28,7 @@ local RemotesFolder = ReplicatedStorage.RemotesFolder
 local ReviveFriendEvent = RemotesFolder.ReviveFriend
 local ObtainReviveEvent = RemotesFolder.ObtainGiftedRevive
 local MotorReplication = RemotesFolder.MotorReplication
-local PingRemote = RemotesFolder.PingRemote
+local RequestLocalAsset = RemotesFolder.RequestLocalAsset
 local Caption = RemotesFolder:FindFirstChild("Caption")
 
 --// Player Variables
@@ -56,7 +56,7 @@ local IsPartnerReady = false
 local IsGiftingRevive = false
 
 --// ============================================================
---// COMMUNICATION THROUGH MOTOR REPLICATION
+--// COMMUNICATION
 --// ============================================================
 local Communication = {
 	Packets = {
@@ -254,8 +254,16 @@ if IsGiftingRevive then
 end
 
 --// Main dupe process
-local pingAfter = math.floor(2/3*1000)
-local pingAfter2 = math.floor(pingAfter/133)
+local pinging = Instance.new("BoolValue")
+local function ping()
+	pinging.Value = true
+	local start = os.clock()
+	RequestLocalAsset:InvokeServer({{}})
+	pinging.Value = false
+	return math.floor((os.clock()-start)*1000)
+end
+
+local nextPing = 100
 if IsMain then
     local ReviveObtainedAmount = 0
 	local AcceptedAmount = 0
@@ -273,15 +281,17 @@ if IsMain then
 			Hint.Text = `{Title}: Accepting all requests please wait`
 			Debris:AddItem(Hint, 10)
             Debris:AddItem(ImporantBool, 10)
-			task.wait(math.random(1,10000)/1000) -- yea
 		else
             ImporantBool:GetPropertyChangedSignal("Value"):Wait() -- yield until not finished
         end
 
+		if pinging.Value then
+			pinging:GetPropertyChangedSignal("Value"):Wait() -- yield until success ping
+		end
+
 		AcceptedAmount += 1
-		if AcceptedAmount >= pingAfter2 then
-			AcceptedAmount -= pingAfter2
-			PingRemote.OnClientEvent:Wait()
+		if AcceptedAmount%nextPing == 0 then
+			nextPing = ping()
 		end
 
         return true
@@ -332,8 +342,8 @@ else
 
 	for i = 1, DuplicationCount do
 		ReviveFriendEvent:FireServer(Partner.Name)
-		if i%pingAfter == 0 then
-			PingRemote.OnClientEvent:Wait()
+		if i%nextPing == 0 then
+			nextPing = ping()
 		end
     end
 
