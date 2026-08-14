@@ -271,7 +271,7 @@ end
 local function ping()
 	local start = os.clock()
 	RequestLocalAsset:InvokeServer({{}})
-	return math.clamp(math.floor((os.clock()-start)*1010), 1, 1000)
+	return math.clamp(math.floor((os.clock()-start)*1100), 1, 1000)
 end
 
 local function toHMS(seconds)
@@ -297,14 +297,14 @@ if IsMain then
 		
 		if ReviveObtainedAmount >= DuplicationCount then
             ImporantBool.Value = not ImporantBool.Value -- continue all yielded gifts
-			Hint.Text = `{Title}: Accepting all requests please wait, approximate time: {toHMS(DuplicationCount*FrameTime/2)}`
+			Hint.Text = `{Title}: Accepting all requests please wait, approximate time: {toHMS(DuplicationCount*FrameTime/4)}`
 			Debris:AddItem(Hint, 10)
             Debris:AddItem(ImporantBool, 10)
 		else
             ImporantBool:GetPropertyChangedSignal("Value"):Wait() -- yield until not finished
         end
 
-		task.wait(FrameTime*id/2)
+		task.wait(FrameTime*id/4)
 
         return true
     end
