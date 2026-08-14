@@ -47,7 +47,7 @@ end
 
 --// Game Data
 local Revives = require(ReplicatedStorage.ReplicaDataModule).data.Revives or 0
-local RevivesMain = IsMain and Revives or require(ReplicatedStorage.ReplicaDataModule).players[Partner].Revives or 0
+local RevivesMain = IsMain and Revives or require(ReplicatedStorage.ReplicaDataModule).players[Partner].data.Revives or 0
 
 --// DuplicationGoal check
 if DuplicationGoal and RevivesMain < DuplicationGoal then
