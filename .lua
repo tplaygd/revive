@@ -34,21 +34,27 @@ local Caption = RemotesFolder:FindFirstChild("Caption")
 
 --// Player Variables
 local LocalPlayer = Players.LocalPlayer
-local Partner
-
---// Game Data
-local Revives = require(ReplicatedStorage.ReplicaDataModule).data.Revives or 0
-
---// DuplicationGoal check
-if DuplicationGoal and Revives < DuplicationGoal then
-	DuplicationCount = DuplicationGoal-Revives
-elseif DuplicationGoal then
-	error("DuplicationGoal is less or equals to amount of Revives you have.")
-end
+local Partner = LocalPlayer.Name ~= MainAccount and Players:FindFirstChild(MainAccount)
 
 --// Determine role
 local IsMain = (MainAccount ~= "" and LocalPlayer.Name == MainAccount)
 local IsAlt = not IsMain
+
+--// Main account check
+if not Partner and IsAlt then
+	error("Main account not found.")
+end
+
+--// Game Data
+local Revives = require(ReplicatedStorage.ReplicaDataModule).data.Revives or 0
+local RevivesMain = IsMain and Revives or require(ReplicatedStorage.ReplicaDataModule).players[Partner].Revives or 0
+
+--// DuplicationGoal check
+if DuplicationGoal and RevivesMain < DuplicationGoal then
+	DuplicationCount = DuplicationGoal-RevivesMain
+elseif DuplicationGoal then
+	error("DuplicationGoal is less or equals to amount of Revives main account has.")
+end
 
 --// Optimization
 if Caption and (IsMain or IsAlt) then
@@ -262,15 +268,10 @@ if IsGiftingRevive then
 end
 
 --// Main dupe process
-local pinging = Instance.new("BoolValue")
 local function ping()
-	pinging.Value = true
 	local start = os.clock()
-	for _ = 1,math.random(1,3) do
-		RequestLocalAsset:InvokeServer({{}})
-	end
-	pinging.Value = false
-	return math.floor((os.clock()-start)*1000*math.random(9000,11000)/10000)
+	RequestLocalAsset:InvokeServer({{}})
+	return math.clamp(math.floor((os.clock()-start)*1010), 1000, 1)
 end
 
 local function toHMS(seconds)
@@ -280,25 +281,23 @@ end
 local nextPing = 100
 if IsMain then
     local ReviveObtainedAmount = 0
-	local AcceptedAmount = 0
 	local Hint
     local ImporantBool = Instance.new("BoolValue")
 	local FrameTime = 1/60
 	task.spawn(function()
 		FrameTime = RunService.RenderStepped:Wait() or 1/60
 	end)
-	local RPM = 0
     local function OnObtainRevive(...)
         if ReviveObtainedAmount >= DuplicationCount then return false end
         ReviveObtainedAmount += 1
 		local id = ReviveObtainedAmount
 		
 		Hint = Hint or Instance.new("Hint", workspace)
-		Hint.Text = `{Title}: Received revive requests: {ReviveObtainedAmount}/{DuplicationCount} (Time left)`
+		Hint.Text = `{Title}: Received revive requests: {ReviveObtainedAmount}/{DuplicationCount}`
 		
 		if ReviveObtainedAmount >= DuplicationCount then
             ImporantBool.Value = not ImporantBool.Value -- continue all yielded gifts
-			Hint.Text = `{Title}: Accepting all requests please wait (approximate time: {toHMS(FrameTime*DuplicationCount/2)})`
+			Hint.Text = `{Title}: Accepting all requests please wait, approximate time: {toHMS(DuplicationCount*FrameTime/2)}`
 			Debris:AddItem(Hint, 10)
             Debris:AddItem(ImporantBool, 10)
 		else
