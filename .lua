@@ -266,9 +266,15 @@ local pinging = Instance.new("BoolValue")
 local function ping()
 	pinging.Value = true
 	local start = os.clock()
-	RequestLocalAsset:InvokeServer({{}})
+	for _ = 1,math.random(1,3) do
+		RequestLocalAsset:InvokeServer({{}})
+	end
 	pinging.Value = false
-	return math.floor((os.clock()-start)*1000)
+	return math.floor((os.clock()-start)*1000*math.random(9000,11000)/10000)
+end
+
+local function toHMS(seconds)
+	return ("%d:%02d:%02d"):format(seconds/3600, (seconds/60)%60, seconds%60)
 end
 
 local nextPing = 100
@@ -277,30 +283,29 @@ if IsMain then
 	local AcceptedAmount = 0
 	local Hint
     local ImporantBool = Instance.new("BoolValue")
+	local FrameTime = 1/60
+	task.spawn(function()
+		FrameTime = RunService.RenderStepped:Wait() or 1/60
+	end)
+	local RPM = 0
     local function OnObtainRevive(...)
         if ReviveObtainedAmount >= DuplicationCount then return false end
         ReviveObtainedAmount += 1
+		local id = ReviveObtainedAmount
 		
 		Hint = Hint or Instance.new("Hint", workspace)
-		Hint.Text = `{Title}: Received revive requests: {ReviveObtainedAmount}/{DuplicationCount}`
+		Hint.Text = `{Title}: Received revive requests: {ReviveObtainedAmount}/{DuplicationCount} (Time left)`
 		
 		if ReviveObtainedAmount >= DuplicationCount then
             ImporantBool.Value = not ImporantBool.Value -- continue all yielded gifts
-			Hint.Text = `{Title}: Accepting all requests please wait`
+			Hint.Text = `{Title}: Accepting all requests please wait (approximate time: {toHMS(FrameTime*DuplicationCount/2)})`
 			Debris:AddItem(Hint, 10)
             Debris:AddItem(ImporantBool, 10)
 		else
             ImporantBool:GetPropertyChangedSignal("Value"):Wait() -- yield until not finished
         end
 
-		if pinging.Value then
-			pinging:GetPropertyChangedSignal("Value"):Wait() -- yield until success ping
-		end
-
-		AcceptedAmount += 1
-		if AcceptedAmount%nextPing == 0 then
-			nextPing = ping()
-		end
+		task.wait(FrameTime*id/2)
 
         return true
     end
