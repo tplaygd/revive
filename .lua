@@ -23,6 +23,7 @@ local StarterGui = game:GetService("StarterGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Debris = game:GetService("Debris")
 local Lighting = game:GetService("Lighting")
+local Stats = game:GetService("Stats")
 
 --// Remotes
 local RemotesFolder = ReplicatedStorage.RemotesFolder
@@ -283,28 +284,33 @@ if IsMain then
     local ReviveObtainedAmount = 0
 	local Hint
     local ImporantBool = Instance.new("BoolValue")
-	local FrameTime = 1/60
-	task.spawn(function()
-		FrameTime = RunService.RenderStepped:Wait() or 1/60
-	end)
+	local LowestFrameTime = Stats.FrameTime
     local function OnObtainRevive(...)
         if ReviveObtainedAmount >= DuplicationCount then return false end
         ReviveObtainedAmount += 1
 		local id = ReviveObtainedAmount
+
+		LowestFrameTime = math.clamp(Stats.FrameTime, 0, LowestFrameTime)
 		
 		Hint = Hint or Instance.new("Hint", workspace)
 		Hint.Text = `{Title}: Received revive requests: {ReviveObtainedAmount}/{DuplicationCount}`
 		
 		if ReviveObtainedAmount >= DuplicationCount then
             ImporantBool.Value = not ImporantBool.Value -- continue all yielded gifts
-			Hint.Text = `{Title}: Accepting all requests please wait, approximate time: {toHMS(DuplicationCount*FrameTime/4)}`
-			Debris:AddItem(Hint, 10)
+			Hint.Text = `{Title}: Accepting all requests, time left: {toHMS(DuplicationCount*LowestFrameTime/4)}`
             Debris:AddItem(ImporantBool, 10)
 		else
             ImporantBool:GetPropertyChangedSignal("Value"):Wait() -- yield until not finished
         end
 
-		task.wait(FrameTime*id/4)
+		task.wait(LowestFrameTime*id/4)
+
+		if id == DuplicationCount then
+			Hint.Text = `{Title}: Accepted all requests!`
+			Debris:AddItem(Hint, 10)
+		else
+			Hint.Text = `{Title}: Accepting all requests, time left: {toHMS((DuplicationCount-id)*LowestFrameTime/4)}`
+		end
 
         return true
     end
