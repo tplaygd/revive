@@ -23,6 +23,7 @@ local StarterGui = game:GetService("StarterGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Debris = game:GetService("Debris")
 local Lighting = game:GetService("Lighting")
+local Stats = game:GetService("Stats")
 
 --// Remotes
 local RemotesFolder = ReplicatedStorage.RemotesFolder
@@ -34,21 +35,27 @@ local Caption = RemotesFolder:FindFirstChild("Caption")
 
 --// Player Variables
 local LocalPlayer = Players.LocalPlayer
-local Partner
-
---// Game Data
-local Revives = require(ReplicatedStorage.ReplicaDataModule).data.Revives or 0
-
---// DuplicationGoal check
-if DuplicationGoal and Revives < DuplicationGoal then
-	DuplicationCount = DuplicationGoal-Revives
-elseif DuplicationGoal then
-	error("DuplicationGoal is less or equals to amount of Revives you have.")
-end
+local Partner = LocalPlayer.Name ~= MainAccount and Players:FindFirstChild(MainAccount)
 
 --// Determine role
 local IsMain = (MainAccount ~= "" and LocalPlayer.Name == MainAccount)
 local IsAlt = not IsMain
+
+--// Main account check
+if not Partner and IsAlt then
+	error("Main account not found.")
+end
+
+--// Game Data
+local Revives = require(ReplicatedStorage.ReplicaDataModule).data.Revives or 0
+local RevivesMain = IsMain and Revives or require(ReplicatedStorage.ReplicaDataModule).players[Partner].data.Revives or 0
+
+--// DuplicationGoal check
+if DuplicationGoal and RevivesMain < DuplicationGoal then
+	DuplicationCount = DuplicationGoal-RevivesMain
+elseif DuplicationGoal then
+	error("DuplicationGoal is less or equals to amount of Revives main account has.")
+end
 
 --// Optimization
 if Caption and (IsMain or IsAlt) then
@@ -251,10 +258,10 @@ end
 --// Coordination delay to ensure both clients are synced
 StarterGui:SetCore("SendNotification", {
     Title = Title,
-    Text = "Waiting 5 seconds to sync with the other account...",
-    Duration = 5
+    Text = "Waiting 3 seconds to sync with the other account...",
+    Duration = 3
 })
-task.wait(5)
+task.wait(3)
 
 --// If we're in the middle of gifting a revive, don't continue
 if IsGiftingRevive then
@@ -262,44 +269,47 @@ if IsGiftingRevive then
 end
 
 --// Main dupe process
-local pinging = Instance.new("BoolValue")
 local function ping()
-	pinging.Value = true
 	local start = os.clock()
 	RequestLocalAsset:InvokeServer({{}})
-	pinging.Value = false
-	return math.floor((os.clock()-start)*1000)
+	return math.clamp(math.floor((os.clock()-start)*1500), 1, 1000)
+end
+
+local function toHMS(seconds)
+	return ("%d:%02d:%02d"):format(seconds/3600, (seconds/60)%60, seconds%60)
 end
 
 local nextPing = 100
 if IsMain then
     local ReviveObtainedAmount = 0
-	local AcceptedAmount = 0
 	local Hint
     local ImporantBool = Instance.new("BoolValue")
+	local LowestFrameTime = Stats.FrameTime
     local function OnObtainRevive(...)
         if ReviveObtainedAmount >= DuplicationCount then return false end
         ReviveObtainedAmount += 1
+		local id = ReviveObtainedAmount
+
+		LowestFrameTime = math.clamp(Stats.FrameTime, 0, LowestFrameTime)
 		
 		Hint = Hint or Instance.new("Hint", workspace)
 		Hint.Text = `{Title}: Received revive requests: {ReviveObtainedAmount}/{DuplicationCount}`
 		
 		if ReviveObtainedAmount >= DuplicationCount then
             ImporantBool.Value = not ImporantBool.Value -- continue all yielded gifts
-			Hint.Text = `{Title}: Accepting all requests please wait`
-			Debris:AddItem(Hint, 10)
+			Hint.Text = `{Title}: Accepting all requests, time left: {toHMS(DuplicationCount*LowestFrameTime/2)}`
             Debris:AddItem(ImporantBool, 10)
 		else
             ImporantBool:GetPropertyChangedSignal("Value"):Wait() -- yield until not finished
         end
 
-		if pinging.Value then
-			pinging:GetPropertyChangedSignal("Value"):Wait() -- yield until success ping
-		end
+		task.wait(LowestFrameTime*id/2)
 
-		AcceptedAmount += 1
-		if AcceptedAmount%nextPing == 0 then
-			nextPing = ping()
+		if id == DuplicationCount then
+			Hint.Text = `{Title}: Accepted all requests!`
+			Debris:AddItem(Hint, 10)
+		else
+			Hint.Text = `{Title}: Accepting all requests, time left: {toHMS((DuplicationCount-id)*LowestFrameTime/4)}`
 		end
 
         return true
