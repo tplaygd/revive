@@ -309,7 +309,7 @@ if IsMain then
 			Hint.Text = `{Title}: Accepted all requests!`
 			Debris:AddItem(Hint, 10)
 		else
-			Hint.Text = `{Title}: Accepting all requests, time left: {toHMS((DuplicationCount-id)*LowestFrameTime/4)}`
+			Hint.Text = `{Title}: Accepting all requests, time left: {toHMS((DuplicationCount-id)*LowestFrameTime/2)}`
 		end
 
         return true
