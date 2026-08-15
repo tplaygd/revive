@@ -258,10 +258,10 @@ end
 --// Coordination delay to ensure both clients are synced
 StarterGui:SetCore("SendNotification", {
     Title = Title,
-    Text = "Waiting 5 seconds to sync with the other account...",
-    Duration = 5
+    Text = "Waiting 3 seconds to sync with the other account...",
+    Duration = 3
 })
-task.wait(5)
+task.wait(3)
 
 --// If we're in the middle of gifting a revive, don't continue
 if IsGiftingRevive then
@@ -272,7 +272,7 @@ end
 local function ping()
 	local start = os.clock()
 	RequestLocalAsset:InvokeServer({{}})
-	return math.clamp(math.floor((os.clock()-start)*1100), 1, 1000)
+	return math.clamp(math.floor((os.clock()-start)*1500), 1, 1000)
 end
 
 local function toHMS(seconds)
@@ -297,13 +297,13 @@ if IsMain then
 		
 		if ReviveObtainedAmount >= DuplicationCount then
             ImporantBool.Value = not ImporantBool.Value -- continue all yielded gifts
-			Hint.Text = `{Title}: Accepting all requests, time left: {toHMS(DuplicationCount*LowestFrameTime/4)}`
+			Hint.Text = `{Title}: Accepting all requests, time left: {toHMS(DuplicationCount*LowestFrameTime/2)}`
             Debris:AddItem(ImporantBool, 10)
 		else
             ImporantBool:GetPropertyChangedSignal("Value"):Wait() -- yield until not finished
         end
 
-		task.wait(LowestFrameTime*id/4)
+		task.wait(LowestFrameTime*id/2)
 
 		if id == DuplicationCount then
 			Hint.Text = `{Title}: Accepted all requests!`
