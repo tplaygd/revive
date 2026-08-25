@@ -12,6 +12,15 @@
 --// DuplicationGoal: How many revives you should have (optional)
 --// ============================================================
 
+if true then
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Revive Dupe",
+        Text = "Revive Duper was patched, DOORS devs fixed revives system.",
+        Duration = 10
+    })
+	return
+end
+
 local MainAccount = MainAccount or ""
 local DuplicationCount = DuplicationCount or 1000
 
