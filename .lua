@@ -12,11 +12,18 @@
 --// DuplicationGoal: How many revives you should have (optional)
 --// ============================================================
 
-if true then
+if game.PlaceId == 6839171747 then
 	game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Revive Dupe",
-        Text = "Revive Duper was patched, DOORS devs fixed revives system.",
+        Text = "Revive Duper was patched, DOORS devs fixed revive gift system.",
         Duration = 10
+    })
+	return
+elseif game.PlaceId ~= 137519142947486 then
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Revive Dupe",
+        Text = "Game is not supported.",
+        Duration = 5
     })
 	return
 end
