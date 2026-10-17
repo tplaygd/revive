@@ -287,7 +287,7 @@ end
 --// Main dupe process
 local function ping()
 	local start = os.clock()
-	RequestLocalAsset:InvokeServer({{}})
+	RequestLocalAsset:InvokeServer({""})
 	return math.clamp(math.floor((os.clock()-start)*1500), 1, 1000)
 end
 
